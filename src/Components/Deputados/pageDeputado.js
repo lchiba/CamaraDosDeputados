@@ -1,24 +1,36 @@
 import React from "react";
 import axios from "axios";
 
+import { Link } from "react-router-dom";
+
 import './stylesPageDeputado.css'
 
 export default class Deputado extends React.Component {
 
     state = {
         deputado : {},
-        load: false
+        load: false,
+        idPartido: null
     }
 
     async componentDidMount() {
         const { id } = this.props.match.params;
         const response = await axios.get('https://dadosabertos.camara.leg.br/api/v2/deputados/'+id);
         const { dados } = response.data;
-        this.setState({ deputado : dados, load: true });
+        const idPartido = this.idPartido(dados.ultimoStatus.uriPartido);
+        console.log(idPartido);
+        this.setState({ deputado : dados, load: true, idPartido: idPartido });
+    }
+
+    idPartido(url) {
+        const url_ = url.split("/");
+        var id = url_[url_.length - 1];
+        id = parseInt(id);
+        return id;
     }
 
     render() {
-        const { deputado, load } = this.state;
+        const { deputado, load, idPartido } = this.state;
 
         return (
             <div className="deputado">
@@ -26,6 +38,11 @@ export default class Deputado extends React.Component {
                     <h1>{ deputado.nomeCivil } - { deputado.ufNascimento }</h1>
                 </div>
 
+                {load &&
+                <div className="botao-partido">
+                    <Link to={ "/partido/"+ idPartido }>Ver Detalhes</Link>
+                </div>
+                }
                 {load &&
                 <div className="info-deputado">   
                     <section className="info-dados">
@@ -56,7 +73,6 @@ export default class Deputado extends React.Component {
                         <h3>Condição Eleitoral: { deputado.ultimoStatus.condicaoEleitoral }</h3>
                         { deputado.ultimoStatus.situacao && <h3>situação: { deputado.ultimoStatus.situacao }</h3> }
                     </section>
-
                 </div>
                 }
             </div>
